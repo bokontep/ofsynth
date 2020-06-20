@@ -21,7 +21,7 @@ void ofApp::update(){
 	int offset = 0;
 	int semitones = 108;
 	uint64_t now = ofGetElapsedTimeMillis();
-	if (now - lastTime > 300)
+	if (now - lastTime > notelength)
 	{
 		lastTime = now;
 		if (toggle) {
@@ -42,7 +42,7 @@ void ofApp::update(){
 			engine->setOsc2Wave(counter % 256);
 			engine->setPwm(counter % 128);
 			this->counter++;
-			lastTime = now + 300;
+			lastTime = now + notelength;
 		}
 		
 		//this->counter++;
@@ -78,13 +78,17 @@ void ofApp::draw(){
 		offset = 0;
 	}
 	int startwaveform = (currwaveform+1)%numwaveforms;
+	if (numwaveforms == 1)
+	{
+		startwaveform = 0;
+	}
 	for (int i = 0; i < numwaveforms;i++)
 	{
 		for (int x = 0; x < 255; x++)
 		{
-			ofSetColor(0.0, i*(255.0/numwaveforms), 10, 255.0);
+			ofSetColor(0.0, (i+1)*(255.0/numwaveforms), 10, 255.0);
 
-			ofLine(4.0*x-i*xoffset, ringbuf[startwaveform*256+(x + offset) % 256] * 500.0 + 100.0+20*i, 4.0*(x + 1)- i*xoffset, ringbuf[startwaveform*256+(x + 1 + offset) % 256] * 500.0 + 100.0+20*i);
+			ofLine(4.0*x-i*xoffset, ringbuf[startwaveform*256+(x + offset) % 256] * 500.0 + 300.0+20*i, 4.0*(x + 1)- i*xoffset, ringbuf[startwaveform*256+(x + 1 + offset) % 256] * 500.0 + 300.0+20*i);
 		
 		}
 		startwaveform = (startwaveform + i) % numwaveforms;
@@ -116,7 +120,7 @@ void ofApp::audioOut(float * output, int bufferSize, int nChannels)
 }
 
 //--------------------------------------------------------------
-void ofApp::keyPressed(int key){
+void ofApp::keyPressed(int key) {
 	if (key == 't' || key == 'T')
 	{
 		triggerline = !triggerline;
@@ -128,6 +132,34 @@ void ofApp::keyPressed(int key){
 	if (key == '-')
 	{
 		xoffset = xoffset - 1;
+	}
+	if (key == 'q' || key == 'Q')
+	{
+		if (numwaveforms < maxnumwaveforms)
+		{
+			numwaveforms++;
+		}
+	}
+	if (key == 'a' || key == 'A')
+	{
+		if (numwaveforms > 1)
+		{
+			numwaveforms--;
+		}
+	}
+	if (key == 'z' || key == 'Z')
+	{
+		if (notelength > 10)
+		{
+			notelength--;
+		}
+	}
+	if (key == 'x' || key == 'X')
+	{
+		if (notelength < 5000)
+		{
+			notelength++;
+		}
 	}
 	currkey = key;
 }

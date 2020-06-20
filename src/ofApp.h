@@ -4,7 +4,7 @@
 #include "VAEngine.h"
 const int WTCOUNT = 256;
 const int WTLEN = 256;
-const int numwaveforms = 20;
+const int maxnumwaveforms = 40;
 class ofApp : public ofBaseApp{
 
 	public:
@@ -29,10 +29,12 @@ class ofApp : public ofBaseApp{
 		VAEngine<16,256,256>* engine;
 		float Waveforms[WTCOUNT*WTLEN];
 		ofSoundStream* soundStream;
-		float ringbuf[256*numwaveforms];
+		float ringbuf[256*maxnumwaveforms];
 		bool triggerline = true;
 		int currwaveform = 0;
+		int numwaveforms = 1;
 		int xoffset = 2;
+		int notelength = 300;
 private:
 	uint64_t lastTime = 0;
 	uint64_t counter = 0;

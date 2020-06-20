@@ -54,15 +54,8 @@ void ofApp::draw(){
 	ofBackground(0.0,0.0,0.0,255.0);
 	ofSetColor(0.0, 255.0, 10, 255.0);
 	ofSetLineWidth(3.0);
-	if (triggerline)
-	{
-		font.drawString("TRIGGER", 20, 32);
-	}
-	char buf[255];
-	sprintf(buf, "keycode:%d", this->currkey);
-	font.drawString(buf, 20, 66);
 	int sign = 0;
-	if (ringbuf[0] >= 0)
+	if (ringbuf[currwaveform * 256] >= 0)
 	{
 		sign = 1;
 	}
@@ -74,7 +67,7 @@ void ofApp::draw(){
 	int offset = 0;
 	for (int i = 1; i < 255; i++)
 	{
-		if ((ringbuf[i] > 0 && sign == -1)||(ringbuf[i]<0 && sign == 1))
+		if ((ringbuf[currwaveform*256+i] > 0 && sign == -1)||(ringbuf[currwaveform*256+i]<0 && sign == 1))
 		{
 			offset = i;
 			break;
@@ -84,10 +77,26 @@ void ofApp::draw(){
 	{
 		offset = 0;
 	}
-	for (int x = 0; x < 255; x++)
+	int startwaveform = (currwaveform+1)%numwaveforms;
+	for (int i = 0; i < numwaveforms;i++)
 	{
-		ofLine(4.0*x, ringbuf[(x+offset)%256]*500.0+300.0, 4.0*(x + 1), ringbuf[(x + 1+offset)%256]*500.0+300.0);
+		for (int x = 0; x < 255; x++)
+		{
+			ofSetColor(0.0, i*(255.0/numwaveforms), 10, 255.0);
+
+			ofLine(4.0*x-i*xoffset, ringbuf[startwaveform*256+(x + offset) % 256] * 500.0 + 100.0+20*i, 4.0*(x + 1)- i*xoffset, ringbuf[startwaveform*256+(x + 1 + offset) % 256] * 500.0 + 100.0+20*i);
+		
+		}
+		startwaveform = (startwaveform + i) % numwaveforms;
 	}
+	if (triggerline)
+	{
+		font.drawString("TRIGGER", 20, 32);
+	}
+	char buf[255];
+	sprintf(buf, "keycode:%d", this->currkey);
+	font.drawString(buf, 20, 66);
+
 }
 
 void ofApp::audioOut(float * output, int bufferSize, int nChannels)
@@ -95,7 +104,7 @@ void ofApp::audioOut(float * output, int bufferSize, int nChannels)
 	int count = 0;
 	for (int i = 0; i < nChannels*bufferSize ; i = i+2) {
 		float sample = engine->Process(); // generating a sine wave sample
-		ringbuf[count++ % 256] = sample;
+		ringbuf[currwaveform*256+(count++ % 256)] = sample;
 		for(int c=0;c<nChannels;c++)
 		{
 			output[i+c] = sample;
@@ -103,7 +112,7 @@ void ofApp::audioOut(float * output, int bufferSize, int nChannels)
 		 // writing to the left channel
 		//output[i + 1] = sample; // writing to the right channel
 	}
-
+	currwaveform = (currwaveform+1) % numwaveforms;
 }
 
 //--------------------------------------------------------------
@@ -111,6 +120,14 @@ void ofApp::keyPressed(int key){
 	if (key == 't' || key == 'T')
 	{
 		triggerline = !triggerline;
+	}
+	if (key == '+')
+	{
+		xoffset = xoffset + 1;
+	}
+	if (key == '-')
+	{
+		xoffset = xoffset - 1;
 	}
 	currkey = key;
 }

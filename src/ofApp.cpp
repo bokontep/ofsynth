@@ -5,6 +5,27 @@ void ofApp::setup(){
 	font.load("digi7.ttf", 32, true);
 	
 	initWaveforms();
+	
+	//setup output port to control ableton push parameters
+	midiOut.listOutPorts();
+	// connect
+	midiOut.openPort(1);
+
+	//setup input port to read notes from ableton push
+	midiIn.listInPorts();
+
+	// open port by number (you may need to change this)
+	midiIn.openPort(1);
+	// don't ignore sysex, timing, & active sense messages,
+		// these are ignored by default
+	midiIn.ignoreTypes(false, false, false);
+
+	// add ofApp as a listener
+	midiIn.addListener(this);
+
+		
+	// print received messages to the console
+	midiIn.setVerbose(true);
 	engine = new VAEngine<16,256,256>(&this->Waveforms[0]);
 	engine->init(44000);
 	soundStream = new ofSoundStream();
@@ -12,15 +33,38 @@ void ofApp::setup(){
 	lastTime = ofGetElapsedTimeMillis();
 	//ofSoundStreamSetup(2, 0);
 	soundStream->setup(2, 0, 44100, 256, 1);
-		
-
+	pushUserMode();
+	pushDisplayMessage(0, 0, "BOKONTEP WAVETABLESYNTH V.0.1");
+	pushDisplayMessage(0, 1, "(C) 2020 ***COVID19***");
 }
+
 
 //--------------------------------------------------------------
 void ofApp::update(){
+
 	int offset = 0;
 	int semitones = 108;
 	uint64_t now = ofGetElapsedTimeMillis();
+	for (ofxMidiMessage message:midiMessages)
+	{
+		switch (message.status)
+		{
+		case MIDI_NOTE_ON:
+			engine->handleNoteOn(0, message.pitch, message.velocity);
+			break;
+		case MIDI_NOTE_OFF:
+			engine->handleNoteOff(0, message.pitch, message.velocity);
+			break;
+		case MIDI_PITCH_BEND:
+			engine->handlePitchBend(0, message.value);
+			break;
+		case MIDI_CONTROL_CHANGE:
+			engine->handleControlChange(0, message.control, message.value);
+			break;
+
+		}
+	}
+	midiMessages.clear();/*
 	if (now - lastTime > notelength)
 	{
 		lastTime = now;
@@ -47,6 +91,7 @@ void ofApp::update(){
 		
 		//this->counter++;
 	}
+	*/
 }
 
 //--------------------------------------------------------------
@@ -254,3 +299,69 @@ void ofApp::initWaveforms()
 		}
 	
 }
+
+void ofApp::newMidiMessage(ofxMidiMessage& msg) {
+
+	// add the latest message to the message queue
+	midiMessages.push_back(msg);
+
+	// remove any old messages if we have too many
+	while (midiMessages.size() > maxMessages) {
+		midiMessages.erase(midiMessages.begin());
+	}
+}
+
+void ofApp::pushDisplayMessage(int x, int y, char* message)
+{
+	int len = (strlen(message)%68);
+	midiOut.sendMidiByte(MIDI_SYSEX);
+	midiOut.sendMidiByte(71);
+	midiOut.sendMidiByte(127);
+	midiOut.sendMidiByte(21);
+	midiOut.sendMidiByte(24+y%4);
+	midiOut.sendMidiByte(0);
+	midiOut.sendMidiByte(len + 1);
+	midiOut.sendMidiByte(x % 68);
+	for (int i = 0; i < len; i++)
+	{
+		midiOut.sendMidiByte(message[i]);
+	}
+
+	midiOut.sendMidiByte(MIDI_SYSEX_END);
+}
+
+void ofApp::pushUserMode()
+{
+	midiOut.sendMidiByte(MIDI_SYSEX);
+	midiOut.sendMidiByte(71);
+	midiOut.sendMidiByte(127);
+	midiOut.sendMidiByte(21);
+	midiOut.sendMidiByte(98);
+	midiOut.sendMidiByte(0);
+	midiOut.sendMidiByte(1);
+	midiOut.sendMidiByte(1);
+	midiOut.sendMidiByte(MIDI_SYSEX_END);
+}
+
+void ofApp::pushLiveMode()
+{
+	midiOut.sendMidiByte(MIDI_SYSEX);
+	midiOut.sendMidiByte(71);
+	midiOut.sendMidiByte(127);
+	midiOut.sendMidiByte(21);
+	midiOut.sendMidiByte(98);
+	midiOut.sendMidiByte(0);
+	midiOut.sendMidiByte(1);
+	midiOut.sendMidiByte(0);
+	midiOut.sendMidiByte(MIDI_SYSEX_END);
+}
+
+
+void ofApp::exit()
+{
+
+	midiIn.closePort();
+	midiOut.closePort();
+	midiIn.removeListener(this);
+}
+

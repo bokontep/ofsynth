@@ -1,11 +1,12 @@
 #pragma once
 
 #include "ofMain.h"
+#include "ofxMidi.h"
 #include "VAEngine.h"
 const int WTCOUNT = 256;
 const int WTLEN = 256;
 const int maxnumwaveforms = 40;
-class ofApp : public ofBaseApp{
+class ofApp : public ofBaseApp, public ofxMidiListener {
 
 	public:
 		void setup();
@@ -23,7 +24,11 @@ class ofApp : public ofBaseApp{
 		void windowResized(int w, int h);
 		void dragEvent(ofDragInfo dragInfo);
 		void gotMessage(ofMessage msg);
+		void exit();
 		void initWaveforms();
+		void pushDisplayMessage(int x, int y, char* message);
+		void pushUserMode();
+		void pushLiveMode();
 		ofTrueTypeFont font;
 		int currkey=0;
 		VAEngine<16,256,256>* engine;
@@ -35,6 +40,21 @@ class ofApp : public ofBaseApp{
 		int numwaveforms = 1;
 		int xoffset = 2;
 		int notelength = 300;
+		//Midi In
+		void newMidiMessage(ofxMidiMessage& eventArgs);
+
+		ofxMidiIn midiIn;
+		std::vector<ofxMidiMessage> midiMessages;
+		std::size_t maxMessages = 10; //< max number of messages to keep track of
+
+		//Midi Out
+		ofxMidiOut midiOut;
+		int channel;
+
+		unsigned int currentPgm;
+		int note, velocity;
+		int pan, bend, touch, polytouch;
+
 private:
 	uint64_t lastTime = 0;
 	uint64_t counter = 0;

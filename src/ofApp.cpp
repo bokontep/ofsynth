@@ -2,7 +2,8 @@
 
 //--------------------------------------------------------------
 void ofApp::setup(){
-	font.load("digi7.ttf", 32, true);
+	ofLogToFile("log.txt");
+	font.load("unifont-13.0.02.ttf", 32, true);
 	
 	initWaveforms();
 	
@@ -14,14 +15,23 @@ void ofApp::setup(){
 	//	[notice] ofxMidiOut : 0 : Microsoft GS Wavetable Synth 0
 	//	[notice] ofxMidiOut : 1 : Ableton Push 1
 	//	[notice] ofxMidiOut : 2 : MIDIOUT2(Ableton Push) 2
-	midiOut2.openPort(1);
-	midiOut.openPort(2);
+	midiOut2.openPort("Ableton Push 1");
+	midiOut.openPort("MIDIOUT2 (Ableton Push) 2");
+	std::vector<string> portNames;
+	portNames = midiOut.getOutPortList();
+	ofLogNotice() << "Output midi port names" << endl;
+	for (int i = 0; i < portNames.size(); i++)
+	{
+		ofLogNotice()  << portNames[i].c_str() << endl;
+	}
+	
+	
 	//midiOut.openPort("MIDIOUT2(Ableton Push)");
 	//setup input port to read notes from ableton push
 	midiIn.listInPorts();
 
 	// open port by number (you may need to change this)
-	midiIn.openPort(1);
+	midiIn.openPort("MIDIIN2 (Ableton Push) 1");
 	// don't ignore sysex, timing, & active sense messages,
 		// these are ignored by default
 	midiIn.ignoreTypes(false, false, false);

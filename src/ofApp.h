@@ -6,6 +6,7 @@
 const int WTCOUNT = 256;
 const int WTLEN = 256;
 const int maxnumwaveforms = 40;
+const int midilines = 20;
 class ofApp : public ofBaseApp, public ofxMidiListener {
 
 	public:
@@ -32,6 +33,10 @@ class ofApp : public ofBaseApp, public ofxMidiListener {
 		void pushSetPad(int x, int y, int c);
 		void pushUserMode();
 		void pushLiveMode();
+		void pushSetPadRGB(int x, int y, uint8_t r, uint8_t g, uint8_t b);
+		
+		std::list<string> mididisplay;
+		
 		ofTrueTypeFont font;
 		int currkey=0;
 		VAEngine<16,256,256>* engine;

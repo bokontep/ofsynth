@@ -154,6 +154,49 @@ public:
           case 28: //PWM
             MidiPwm(value);
           break;
+		  case 71: //OSC 1 waveform
+			  if (value < 64)
+			  {
+				  int newval = getMidiOsc1Wave() + value;
+				  if (newval > 255)
+				  {
+					  newval = 255 - newval;
+				  }
+				  MidiOsc1Wave(newval);
+				  
+			  } else if (value > 64)
+			  {
+				  int newval = getMidiOsc1Wave()+(value - 128);
+				  if (newval < 0)
+				  {
+					  newval = 255- newval;
+				  }
+				  MidiOsc1Wave(newval);
+			  }
+			  
+			  break;
+		  case 72: //OSC 2 waveform
+			  if (value < 64)
+			  {
+				  int newval = getMidiOsc2Wave() + value;
+				  if (newval > 255)
+				  {
+					  newval = 255 - newval;
+				  }
+				  MidiOsc2Wave(newval);
+
+			  }
+			  else if (value > 64)
+			  {
+				  int newval = getMidiOsc2Wave() + (value - 128);
+				  if (newval < 0)
+				  {
+					  newval = 255 - newval;
+				  }
+				  MidiOsc2Wave(newval);
+			  }
+
+			  break;
   
       }
       //AudioInterrupts();
@@ -200,11 +243,19 @@ public:
       osc[0].SetWaveTable(newwave);
       wt1_idx = newwave;
     }
+	int getMidiOsc1Wave()
+	{
+		return wt1_idx;
+	}
     void MidiOsc2Wave(uint8_t newwave)
     {
       osc[1].SetWaveTable(newwave);
       wt2_idx = newwave;
     }
+	int getMidiOsc2Wave()
+	{
+		return wt2_idx;
+	}
     void SetFilterParameters(uint8_t filter_freq, uint8_t filter_q)
     {
       lowpass.SetParameters(filter_freq/127.0,filter_q/127.0);

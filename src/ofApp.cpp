@@ -53,7 +53,22 @@ void ofApp::setup(){
 	lastTime = ofGetElapsedTimeMillis();
 	//ofSoundStreamSetup(2, 0);
 	soundStream->setup(2, 0, 44100, 256, 1);
-	
+	for (int y = 0; y < 9; y++)
+	{
+		for (int x = 0; x < 8; x++)
+		{
+			pushSetPadRGB(x, y, 8 * x + 8, 8 * y + y, 8 * x + y);
+		}
+	}
+	pushSetPadRGB(0, 0, 127, 127, 127);
+	pushSetPadRGB(1, 0, 255, 255, 255);
+	pushSetPadRGB(2, 0, 255, 0, 0);
+	pushSetPadRGB(3, 0, 0, 255, 0);
+	pushSetPadRGB(4, 0, 0, 0, 255);
+	pushSetPadRGB(5, 0, 255, 255, 0);
+	pushSetPadRGB(6, 0, 0, 255, 255);
+	pushSetPadRGB(7, 0, 255, 0, 255);
+
 }
 
 
@@ -68,13 +83,18 @@ void ofApp::update(){
 		switch (message.status)
 		{
 		case MIDI_NOTE_ON:
-			engine->handleNoteOn(0, message.pitch, message.velocity);
+			if (message.pitch >= 36 && message.pitch <= 99)
 			{
-				int y = (message.pitch - 36) / 8;
-				int x = message.pitch - y * 8 - 36;
-				if (x >= 0 && x <= 7 && y >= 0 && y <= 7)
+				if (triggerline)
+					message.velocity = 127;
+				engine->handleNoteOn(0, message.pitch, message.velocity);
 				{
-					pushSetPad(x, y, 3);
+					int y = (message.pitch - 36) / 8;
+					int x = message.pitch - y * 8 - 36;
+					if (x >= 0 && x <= 7 && y >= 0 && y <= 7)
+					{
+						pushSetPad(x, y, 3);
+					}
 				}
 			}
 			break;
@@ -180,6 +200,22 @@ void ofApp::draw(){
 	char buf[255];
 	sprintf(buf, "keycode:%d", this->currkey);
 	font.drawString(buf, 20, 66);
+	
+	if (!mididisplay.empty())
+	{
+		while (mididisplay.size() > 20)
+		{
+			mididisplay.pop_front();
+		}
+	std:list < std::string >::iterator it;
+		int y = 30;
+		for (it = mididisplay.begin(); it != mididisplay.end(); it++)
+		{
+			font.drawString(it->c_str(), 600, y);
+			y = y + 30;
+		}
+		
+	}
 
 }
 
@@ -338,8 +374,24 @@ void ofApp::initWaveforms()
 void ofApp::newMidiMessage(ofxMidiMessage& msg) {
 
 	// add the latest message to the message queue
+	char buf[255];
 	midiMessages.push_back(msg);
-
+	if (msg.status == MIDI_CONTROL_CHANGE)
+	{
+		sprintf(buf, "CC%02d-%03d-%03d", msg.channel, msg.control, msg.value);
+		mididisplay.push_back(buf);
+	}
+	if (msg.status == MIDI_NOTE_ON)
+	{
+		sprintf(buf, "NN%02d-%03d-%03d", msg.channel, msg.pitch, msg.velocity);
+		mididisplay.push_back(buf);
+	}
+	if (msg.status == MIDI_NOTE_OFF)
+	{
+		sprintf(buf, "NF%02d-%03d-%03d", msg.channel, msg.pitch, msg.velocity);
+		mididisplay.push_back(buf);
+	}
+	
 	// remove any old messages if we have too many
 	while (midiMessages.size() > maxMessages) {
 		midiMessages.erase(midiMessages.begin());
@@ -424,7 +476,37 @@ void ofApp::pushSetPad(int x, int y, int c)
 	midiOut.sendNoteOn(1, note, c);
 	//midiOut2.sendNoteOn(0, note, 3);
 }
+void ofApp::pushSetPadRGB(int x, int y, uint8_t r, uint8_t g, uint8_t b)
+{
+	x = x % 8;
+	y = y % 9;
+	uint8_t r1 = r>>4;
+	uint8_t r2 = r%16;
+	uint8_t g1 = g>>4;
+	uint8_t g2 = g%16;
+	uint8_t b1 = b>>4;
+	uint8_t b2 = b%16;
 
+	std::vector<uint8_t> msg;
+	msg.push_back(MIDI_SYSEX);
+	msg.push_back(71);
+	msg.push_back(127);
+	msg.push_back(21);
+	msg.push_back(4);
+	msg.push_back(0);
+	msg.push_back(8);
+	msg.push_back(x+y*8);
+	msg.push_back(0);
+	msg.push_back(r1);
+	msg.push_back(r2);
+	msg.push_back(g1);
+	msg.push_back(g2);
+	msg.push_back(b1);
+	msg.push_back(b2);
+
+	msg.push_back(MIDI_SYSEX_END);
+	midiOut.sendMidiBytes(msg);
+}
 void ofApp::exit()
 {
 

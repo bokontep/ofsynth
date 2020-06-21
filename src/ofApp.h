@@ -27,6 +27,9 @@ class ofApp : public ofBaseApp, public ofxMidiListener {
 		void exit();
 		void initWaveforms();
 		void pushDisplayMessage(int x, int y, char* message);
+		void pushClearLine(int line);
+		void pushClearScreen();
+		void pushSetPad(int x, int y, int c);
 		void pushUserMode();
 		void pushLiveMode();
 		ofTrueTypeFont font;
@@ -55,6 +58,7 @@ class ofApp : public ofBaseApp, public ofxMidiListener {
 		int note, velocity;
 		int pan, bend, touch, polytouch;
 
+		ofxMidiOut midiOut2;
 private:
 	uint64_t lastTime = 0;
 	uint64_t counter = 0;

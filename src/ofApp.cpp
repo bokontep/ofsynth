@@ -9,8 +9,14 @@ void ofApp::setup(){
 	//setup output port to control ableton push parameters
 	midiOut.listOutPorts();
 	// connect
-	midiOut.openPort(1);
 
+	//	[notice] ofxMidiOut: 3 ports available
+	//	[notice] ofxMidiOut : 0 : Microsoft GS Wavetable Synth 0
+	//	[notice] ofxMidiOut : 1 : Ableton Push 1
+	//	[notice] ofxMidiOut : 2 : MIDIOUT2(Ableton Push) 2
+	midiOut2.openPort(1);
+	midiOut.openPort(2);
+	//midiOut.openPort("MIDIOUT2(Ableton Push)");
 	//setup input port to read notes from ableton push
 	midiIn.listInPorts();
 
@@ -26,16 +32,18 @@ void ofApp::setup(){
 		
 	// print received messages to the console
 	midiIn.setVerbose(true);
+	//pushLiveMode();
+	pushClearScreen();
+	pushDisplayMessage(0, 0, "BOKONTEP WAVETABLESYNTH V.0.1");
+	pushDisplayMessage(0, 1, "(C) 2020 ***COVID19***");
 	engine = new VAEngine<16,256,256>(&this->Waveforms[0]);
-	engine->init(44000);
+	engine->init(44100);
 	soundStream = new ofSoundStream();
 	engine->setADSR(30, 30, 127, 20);
 	lastTime = ofGetElapsedTimeMillis();
 	//ofSoundStreamSetup(2, 0);
 	soundStream->setup(2, 0, 44100, 256, 1);
-	pushUserMode();
-	pushDisplayMessage(0, 0, "BOKONTEP WAVETABLESYNTH V.0.1");
-	pushDisplayMessage(0, 1, "(C) 2020 ***COVID19***");
+	
 }
 
 
@@ -51,9 +59,26 @@ void ofApp::update(){
 		{
 		case MIDI_NOTE_ON:
 			engine->handleNoteOn(0, message.pitch, message.velocity);
+			{
+				int y = (message.pitch - 36) / 8;
+				int x = message.pitch - y * 8 - 36;
+				if (x >= 0 && x <= 7 && y >= 0 && y <= 7)
+				{
+					pushSetPad(x, y, 3);
+				}
+			}
 			break;
 		case MIDI_NOTE_OFF:
 			engine->handleNoteOff(0, message.pitch, message.velocity);
+			{
+				int y = (message.pitch - 36) / 8;
+				int x = message.pitch - y * 8 - 36;
+				if (x >= 0 && x <= 7 && y >= 0 && y <= 7)
+				{
+					pushSetPad(x, y, 0);
+				}
+			}
+			break;
 			break;
 		case MIDI_PITCH_BEND:
 			engine->handlePitchBend(0, message.value);
@@ -314,20 +339,45 @@ void ofApp::newMidiMessage(ofxMidiMessage& msg) {
 void ofApp::pushDisplayMessage(int x, int y, char* message)
 {
 	int len = (strlen(message)%68);
-	midiOut.sendMidiByte(MIDI_SYSEX);
-	midiOut.sendMidiByte(71);
-	midiOut.sendMidiByte(127);
-	midiOut.sendMidiByte(21);
-	midiOut.sendMidiByte(24+y%4);
-	midiOut.sendMidiByte(0);
-	midiOut.sendMidiByte(len + 1);
-	midiOut.sendMidiByte(x % 68);
+	std::vector<uint8_t> msg;
+	msg.push_back(MIDI_SYSEX);
+	msg.push_back(71);
+	msg.push_back(127);
+	msg.push_back(21);
+	msg.push_back(24 + y % 4);
+	msg.push_back(0);
+	msg.push_back(len + 1);
+	msg.push_back(x % 68);
 	for (int i = 0; i < len; i++)
 	{
-		midiOut.sendMidiByte(message[i]);
+		msg.push_back(message[i]);
 	}
+	msg.push_back(MIDI_SYSEX_END);
+	midiOut.sendMidiBytes(msg);
+}
 
-	midiOut.sendMidiByte(MIDI_SYSEX_END);
+void ofApp::pushClearLine(int line)
+{
+	std::vector<uint8_t> msg;
+	msg.push_back(MIDI_SYSEX);
+	msg.push_back(71);
+	msg.push_back(127);
+	msg.push_back(21);
+	msg.push_back(28 + line % 4);
+	msg.push_back(0);
+	msg.push_back(0);
+	msg.push_back(MIDI_SYSEX_END);
+	midiOut.sendMidiBytes(msg);
+}
+
+
+void ofApp::pushClearScreen()
+{
+	pushClearLine(0);
+	pushClearLine(1);
+	pushClearLine(2);
+	pushClearLine(3);
+
 }
 
 void ofApp::pushUserMode()
@@ -356,12 +406,22 @@ void ofApp::pushLiveMode()
 	midiOut.sendMidiByte(MIDI_SYSEX_END);
 }
 
+void ofApp::pushSetPad(int x, int y, int c)
+{
+	int note = y * 8 + 36 + x;
+	//midiOut.sendNoteOn(0,note , 3);
+	//midiOut2.sendNoteOn(0, note, 3);
+	midiOut.sendNoteOn(1, note, c);
+	//midiOut2.sendNoteOn(0, note, 3);
+}
 
 void ofApp::exit()
 {
 
 	midiIn.closePort();
 	midiOut.closePort();
+	midiOut2.closePort();
 	midiIn.removeListener(this);
+	soundStream->close();
 }
 

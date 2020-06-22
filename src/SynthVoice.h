@@ -13,13 +13,17 @@ public:
         this->sampleRate = 8000;
         this->modulation = 0;
         this->pwm = 0.5;
+		this->vol1 = 1.0;
+		this->vol2 = 1.0;
         this->fmod1 = 1.0;
         this->fmod2 = 1.0;
         this->fmod3 = 0.0;
         this->ffreq = 1.0;
         this->fq = 0.1;
-        lowpass.SetParameters(ffreq, fq);
-        
+		this->wt1_idx = 0;
+		this->wt2_idx = 0;
+		lowpass.SetParameters(ffreq, fq);
+		
     }
     SynthVoice(float sampleRate) {
         this->sampleRate = sampleRate;
@@ -30,7 +34,9 @@ public:
         this->fmod3 = 0.0;
         this->ffreq = 1.0;
         this->fq = 0.1;
-        lowpass.SetParameters(ffreq, fq);
+		wt1_idx = 0;
+		wt2_idx = 0;
+		lowpass.SetParameters(ffreq, fq);
     }
     ~SynthVoice(void) {
         
@@ -155,49 +161,140 @@ public:
             MidiPwm(value);
           break;
 		  case 71: //OSC 1 waveform
-			  if (value < 64)
+			  if (value>=0 && value <= 64)
 			  {
-				  int newval = getMidiOsc1Wave() + value;
+				  int wave = getMidiOsc1Wave();
+				  int v = (int)value;
+				  int newval = wave + v;
 				  if (newval > 255)
 				  {
-					  newval = 255 - newval;
+					  newval = newval-255;
 				  }
 				  MidiOsc1Wave(newval);
 				  
-			  } else if (value > 64)
+			  } else if (value > 64 && value <=127)
 			  {
-				  int newval = getMidiOsc1Wave()+(value - 128);
+				  int wave = getMidiOsc1Wave();
+				  int v = (int)value;
+				  int newval = wave - (128-v);
 				  if (newval < 0)
 				  {
-					  newval = 255- newval;
+					  newval = 256+ newval;
 				  }
 				  MidiOsc1Wave(newval);
 			  }
 			  
 			  break;
-		  case 72: //OSC 2 waveform
+		  case 72: //OSC 1 volume
+			  if (value < 64)
+			  {
+				  int newval = GetOsc1Volume() + value;
+				  if (newval > 127)
+				  {
+					  newval = 127;
+				  }
+				  SetOsc1Volume(newval);
+
+			  }
+			  else if (value > 64)
+			  {
+				  int newval = GetOsc1Volume() - (128 - (int)value);
+				  if (newval < 0)
+				  {
+					  newval = 0;
+				  }
+				  SetOsc1Volume(newval);
+			  }
+
+			  break;
+		  case 73: //OSC 1 phase offset
+			  if (value < 64)
+			  {
+				  int newval = GetOsc1PhaseOffset() + value;
+				  if (newval > 127)
+				  {
+					  newval = 127;
+				  }
+				  SetOsc1PhaseOffset(newval);
+
+			  }
+			  else if (value > 64)
+			  {
+				  int newval = GetOsc1PhaseOffset() - (128 - (int)value);
+				  if (newval < 0)
+				  {
+					  newval = 0;
+				  }
+				  SetOsc1PhaseOffset(newval);
+			  }
+
+			  break;
+		  case 75: //OSC 2 waveform
 			  if (value < 64)
 			  {
 				  int newval = getMidiOsc2Wave() + value;
 				  if (newval > 255)
 				  {
-					  newval = 255 - newval;
+					  newval = newval - 255;
 				  }
 				  MidiOsc2Wave(newval);
 
 			  }
 			  else if (value > 64)
 			  {
-				  int newval = getMidiOsc2Wave() + (value - 128);
+				  int newval = getMidiOsc2Wave() - (128-value);
 				  if (newval < 0)
 				  {
-					  newval = 255 - newval;
+					  newval = 256 + newval;
 				  }
 				  MidiOsc2Wave(newval);
 			  }
 
 			  break;
-  
+		  case 76: //OSC 2 volume
+			  if (value < 64)
+			  {
+				  int newval = GetOsc2Volume() + value;
+				  if (newval > 127)
+				  {
+					  newval = 127;
+				  }
+				  SetOsc2Volume(newval);
+
+			  }
+			  else if (value > 64)
+			  {
+				  int newval = GetOsc2Volume() - (128 - value);
+				  if (newval < 0)
+				  {
+					  newval = 0;
+				  }
+				  SetOsc2Volume(newval);
+			  }
+
+			  break;
+		  case 77: //OSC 2 phase
+			  if (value < 64)
+			  {
+				  int newval = GetOsc2PhaseOffset() + value;
+				  if (newval > 127)
+				  {
+					  newval = 127;
+				  }
+				  SetOsc2PhaseOffset(newval);
+
+			  }
+			  else if (value > 64)
+			  {
+				  int newval = GetOsc2PhaseOffset() - (128 - value);
+				  if (newval < 0)
+				  {
+					  newval = 0;
+				  }
+				  SetOsc2PhaseOffset(newval);
+			  }
+
+			  break;
       }
       //AudioInterrupts();
     }
@@ -234,10 +331,35 @@ public:
     {
       osc[0].SetPhaseOffset(newphase/127.0);
     }
+	uint8_t GetOsc1PhaseOffset()
+	{
+		return (uint8_t)(osc[0].GetPhaseOffset() * 127.0);
+	}
     void SetOsc2PhaseOffset(uint8_t newphase)
     {
       osc[1].SetPhaseOffset(newphase/127.0);
     }
+	uint8_t GetOsc2PhaseOffset()
+	{
+		return (uint8_t)(osc[1].GetPhaseOffset() * 127.0);
+	}
+	void SetOsc1Volume(uint8_t volume)
+	{
+		vol1 = ((float)volume)/127.0;
+	}
+	uint8_t GetOsc1Volume()
+	{
+		return (uint8_t)(vol1*127.0);
+	}
+
+	void SetOsc2Volume(uint8_t volume)
+	{
+		vol2 = ((float)volume)/127.0;
+	}
+	uint8_t GetOsc2Volume()
+	{
+		return (uint8_t)(vol2*127.0);
+	}
     void MidiOsc1Wave(uint8_t newwave)
     {
       osc[0].SetWaveTable(newwave);
@@ -264,11 +386,11 @@ public:
     {
       if(modulation<=0.01)
       {
-        return (lowpass.Process(velocity*adsr[0].Process()*osc[0].Process()*fmod1+velocity*adsr[1].Process()*osc[1].Process()*fmod2));
+        return 0.5*(lowpass.Process(velocity*adsr[0].Process()*vol1*osc[0].Process()*fmod1+velocity*adsr[1].Process()*vol2*osc[1].Process()*fmod2));
       }
       else
       {
-        return  lowpass.Process((velocity*adsr[0].Process()*osc[0].Process()*fmod1) + (velocity*adsr[1].Process()*osc[1].Process()*fmod2) + (velocity*(adsr[0].Process()*osc[0].Process()*osc[1].Process()*fmod3)));
+        return  0.5*lowpass.Process((velocity*adsr[0].Process()*vol1*osc[0].Process()*fmod1) + (velocity*adsr[1].Process()*vol2*osc[1].Process()*fmod2) + (velocity*(adsr[0].Process()*vol1*osc[0].Process()*vol2*osc[1].Process()*fmod3)));
       }
     }
     bool IsPlaying()
@@ -283,6 +405,8 @@ public:
 protected:
     FloatWaveTableOsc osc[2];
     ADSR adsr[2];
+	float vol1;
+	float vol2;
     float sampleRate;
     float freq1;
     float freq2;

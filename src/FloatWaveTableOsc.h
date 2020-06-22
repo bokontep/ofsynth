@@ -65,7 +65,10 @@ public:
     void SetPhaseOffset(float offset) {
         mPhaseOfs = offset;
     }
-
+	float GetPhaseOffset()
+	{
+		return mPhaseOfs;
+	}
     //
     // UpdatePhase: Call once per sample
     //

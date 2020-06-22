@@ -332,42 +332,85 @@ void ofApp::dragEvent(ofDragInfo dragInfo){
 
 void ofApp::initWaveforms()
 {
-		for (int i = 0; i < WTLEN; i++)
-		{
-			Waveforms[i] = ((sin(2.0 * (PI / (float)WTLEN) * i)));
-		}
-		for (int i = 0; i < 128; i++)
-		{
-			Waveforms[WTLEN + i] = ((-1.0 + i * (1.0 / ((double)WTLEN / 2.0))));
-		}
-		for (int i = 128; i < 256; i++)
-		{
-			Waveforms[WTLEN + i] = ((1.0 - i * (1.0 / ((double)WTLEN / 2.0))));
-		}
+	float sintable[WTLEN];
+	float tritable[WTLEN];
+	float squtable[WTLEN];
+	float sawtable[WTLEN];
+	float rndtable[WTLEN];
+	for (int i = 0; i < WTLEN; i++)
+	{
+		sintable[i] = ((sin(2.0 * (PI / (float)WTLEN) * i)));
+	}
+	
+	
+	for (int i = 0; i < 128; i++)
+	{
+		tritable[i] = ((-1.0 + i * (1.0 / ((double)WTLEN / 2.0))));
+	}
+	for (int i = 128; i < 256; i++)
+	{
+		tritable[i] = ((1.0 - i * (1.0 / ((double)WTLEN / 2.0))));
+	}
+	for (int i = 0; i < 256; i++)
+	{
+		squtable[i] = (i < (WTLEN / 2) ? 1.0 : -1.0);
+	}
+	for (int i = 0; i < 256; i++)
+	{
+		sawtable[i] = ((-1.0 + (2.0 / WTLEN) * i));
+	}
+	for (int i = 0; i < 256; i++)
+	{
+		rndtable[i] = ofRandom(-1,1);
+	}
+	float sinf = 1.0;
+	float trif = 0.0;
+	float squf = 0.0;
+	float sawf = 0.0;
+	float rndf = 0.0;
+	float l = (float)WTCOUNT / 5.0;
+	int counter = 0;
+	float f = (1.0 / (float)l);
+ 	for (int w = 0; w < WTCOUNT; w++)
+	{
 		for (int i = 0; i < 256; i++)
 		{
-			Waveforms[2 * WTLEN + i] = (i < (WTLEN / 2) ? 1.0 : -1.0);
+			Waveforms[w*WTLEN + i] = sinf * sintable[i] + trif * tritable[i] + squf * squtable[i] + sawf * sawtable[i] + rndf * rndtable[i];
 		}
-		for (int i = 0; i < 256; i++)
+		if (counter <= l)
 		{
-			Waveforms[3 * WTLEN + i] = ((-1.0 + (2.0 / WTLEN) * i));
+			sinf = sinf - f;
+			trif = trif + f;
 		}
-		for (int i = 0; i < WTLEN; i++)
+		else if (counter > l && counter <= 2 * l)
 		{
-			Waveforms[4 * WTLEN + i] = -1.0 + rand()* (2.0 / (1UL << 31));
+			sinf = 0.0;
+			trif = trif - f;
+			squf = squf + f;
 		}
-
-		for (int w = 5; w < WTCOUNT; w++)
+		else if (counter >= 2 * l && counter < 3 * l)
 		{
-			for (int i = 0; i < 256; i++)
-			{
-				float f1 = (WTCOUNT - w) / 120;
-				float f2 = ((WTCOUNT - w) % 120) / 110.0;
-				float f3 = ((WTCOUNT - w) % 62) / 60.0;
-				float f4 = ((WTCOUNT - w) % 31) / 31.0;
-				Waveforms[w*WTLEN + i] = ((f1*Waveforms[i] + f2 * Waveforms[WTLEN + i] + f3 * Waveforms[2 * WTLEN + i] + f4 * Waveforms[3 * WTLEN + i]) / 4);
-			}
+			trif = 0.0;
+			squf = squf - f;
+			sawf = sawf + f;
 		}
+		else if (counter >= 3 * l && counter < 4 * l)
+		{
+			squf = 0.0;
+			sawf = sawf - f;
+			rndf = rndf + f;
+		}
+		else
+		{
+			sawf = 0.0;
+			rndf = rndf - f;
+			sinf = sinf + f;
+		}
+		counter++;
+	}
+		
+		
+		
 	
 }
 
@@ -378,7 +421,7 @@ void ofApp::newMidiMessage(ofxMidiMessage& msg) {
 	midiMessages.push_back(msg);
 	if (msg.status == MIDI_CONTROL_CHANGE)
 	{
-		sprintf(buf, "CC%02d-%03d-%03d", msg.channel, msg.control, msg.value);
+		sprintf(buf, "CC%02d|%+03d|%+03d", msg.channel, msg.control, msg.value);
 		mididisplay.push_back(buf);
 	}
 	if (msg.status == MIDI_NOTE_ON)

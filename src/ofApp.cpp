@@ -149,73 +149,139 @@ void ofApp::update(){
 	*/
 }
 
+void ofApp::drawEditWaveTable()
+{
+    ofBackground(0.0,0.0,0.0,255.0);
+    ofSetColor(0.0, 255.0, 10, 255.0);
+    ofSetLineWidth(3.0);
+    font.drawString("EDIT WAVETABLE",20,33);
+    int ypos = 768-128;
+    int xpos = 16;
+    char buf[255];
+    ofSetLineWidth(1.0);
+    for(int i=0;i<18;i++)
+    {
+        int index = (this->wavetablepos+i)%WTCOUNT;
+        ofDrawLine(xpos+i*WTLEN/4,ypos-32,xpos+(i+1)*(WTLEN/4),ypos-32);
+        ofDrawLine(xpos+i*WTLEN/4,ypos+32,xpos+(i+1)*(WTLEN/4),ypos+32);
+        ofDrawLine(xpos+i*WTLEN/4,ypos-32,xpos+i*WTLEN/4,ypos+64);
+        ofDrawLine(xpos+(i+1)*(WTLEN/4),ypos-32,xpos+(i+1)*(WTLEN/4),ypos+64);
+
+        for(int w=0;w<WTLEN/4-1;w=w+1)
+        {
+            int y1 = Waveforms[index*WTLEN+w*4]*32;
+            if(y1>32)
+            {
+                y1=32;
+            }
+            if(y1<-32)
+            {
+                y1=-32;
+            }
+
+            int y2 = Waveforms[index*WTLEN+(w+1)*4]*32;
+            if(y2>32)
+            {
+                y2=32;
+            }
+            if(y2<-32)
+            {
+                y2=-32;
+            }
+            ofDrawLine(xpos+w+i*WTLEN/4,ypos+y1,xpos+w+1+i*WTLEN/4,ypos+y2);
+        }
+        sprintf(buf, "%03d",index);
+        font.drawString(buf,xpos+i*WTLEN/4,ypos+64);
+
+    }
+    for(int w=0;w<WTLEN-1;w++)
+    {
+        ofDrawLine(xpos + w, ypos-512+Waveforms[this->wavetablepos*WTLEN+w]*128, xpos+w+1,ypos-512+Waveforms[this->wavetablepos*WTLEN+w+1]*128);
+    }
+}
+
+
+void ofApp::drawPlayMode()
+{
+    ofBackground(0.0,0.0,0.0,255.0);
+    ofSetColor(0.0, 255.0, 10, 255.0);
+    ofSetLineWidth(3.0);
+    int sign = 0;
+    if (ringbuf[currwaveform * 256] >= 0)
+    {
+        sign = 1;
+    }
+    else
+    {
+        sign = -1;
+    }
+
+    int offset = 0;
+    for (int i = 1; i < 255; i++)
+    {
+        if ((ringbuf[currwaveform*256+i] > 0 && sign == -1)||(ringbuf[currwaveform*256+i]<0 && sign == 1))
+        {
+            offset = i;
+            break;
+        }
+    }
+    if (!triggerline)
+    {
+        offset = 0;
+    }
+    int startwaveform = (currwaveform+1)%numwaveforms;
+    if (numwaveforms == 1)
+    {
+        startwaveform = 0;
+    }
+    for (int i = 0; i < numwaveforms;i++)
+    {
+        for (int x = 0; x < 255; x++)
+        {
+            ofSetColor(0.0, (i+1)*(255.0/numwaveforms), 10, 255.0);
+
+            ofLine(4.0*x-i*xoffset, ringbuf[startwaveform*256+(x + offset) % 256] * 500.0 + 300.0+20*i, 4.0*(x + 1)- i*xoffset, ringbuf[startwaveform*256+(x + 1 + offset) % 256] * 500.0 + 300.0+20*i);
+
+        }
+        startwaveform = (startwaveform + i) % numwaveforms;
+    }
+    font.drawString("PLAY",20,33);
+    if (triggerline)
+    {
+        font.drawString("TRIGGER", 20, 66);
+    }
+    char buf[255];
+    sprintf(buf, "keycode:%d", this->currkey);
+    font.drawString(buf, 20, 99);
+
+    if (!mididisplay.empty())
+    {
+        while (mididisplay.size() > 20)
+        {
+            mididisplay.pop_front();
+        }
+    std:list < std::string >::iterator it;
+        int y = 30;
+        for (it = mididisplay.begin(); it != mididisplay.end(); it++)
+        {
+            font.drawString(it->c_str(), 600, y);
+            y = y + 30;
+        }
+
+    }
+}
 //--------------------------------------------------------------
 void ofApp::draw(){
-	ofBackground(0.0,0.0,0.0,255.0);
-	ofSetColor(0.0, 255.0, 10, 255.0);
-	ofSetLineWidth(3.0);
-	int sign = 0;
-	if (ringbuf[currwaveform * 256] >= 0)
-	{
-		sign = 1;
-	}
-	else
-	{
-		sign = -1;
-	}
+    switch(state)
+    {
+    case AS_PLAY:
 
-	int offset = 0;
-	for (int i = 1; i < 255; i++)
-	{
-		if ((ringbuf[currwaveform*256+i] > 0 && sign == -1)||(ringbuf[currwaveform*256+i]<0 && sign == 1))
-		{
-			offset = i;
-			break;
-		}
-	}
-	if (!triggerline)
-	{
-		offset = 0;
-	}
-	int startwaveform = (currwaveform+1)%numwaveforms;
-	if (numwaveforms == 1)
-	{
-		startwaveform = 0;
-	}
-	for (int i = 0; i < numwaveforms;i++)
-	{
-		for (int x = 0; x < 255; x++)
-		{
-			ofSetColor(0.0, (i+1)*(255.0/numwaveforms), 10, 255.0);
-
-			ofLine(4.0*x-i*xoffset, ringbuf[startwaveform*256+(x + offset) % 256] * 500.0 + 300.0+20*i, 4.0*(x + 1)- i*xoffset, ringbuf[startwaveform*256+(x + 1 + offset) % 256] * 500.0 + 300.0+20*i);
-		
-		}
-		startwaveform = (startwaveform + i) % numwaveforms;
-	}
-	if (triggerline)
-	{
-		font.drawString("TRIGGER", 20, 32);
-	}
-	char buf[255];
-	sprintf(buf, "keycode:%d", this->currkey);
-	font.drawString(buf, 20, 66);
-	
-	if (!mididisplay.empty())
-	{
-		while (mididisplay.size() > 20)
-		{
-			mididisplay.pop_front();
-		}
-	std:list < std::string >::iterator it;
-		int y = 30;
-		for (it = mididisplay.begin(); it != mididisplay.end(); it++)
-		{
-			font.drawString(it->c_str(), 600, y);
-			y = y + 30;
-		}
-		
-	}
+        drawPlayMode();
+        break;
+    case AS_EDIT_WAVETABLE:
+        drawEditWaveTable();
+        break;
+    }
 
 }
 
@@ -276,8 +342,43 @@ void ofApp::keyPressed(int key) {
 		{
 			notelength++;
 		}
-	}
+    }
+    if(key == 'e' || key == 'E')
+    {
+        state = AS_EDIT_WAVETABLE;
+    }
+    if(key == 'p' || key == 'P')
+    {
+        state = AS_PLAY;
+    }
+    if(key =='<' || key == ',')
+    {
+        if(state==AS_EDIT_WAVETABLE)
+        {
+            int v = this->wavetablepos;
+            v = v-1;
+            if(v<0)
+            {
+                v=WTCOUNT-1;
+            }
+            this->wavetablepos = v;
+        }
+    }
+    if(key =='>' || key=='.')
+    {
+        if(state==AS_EDIT_WAVETABLE)
+        {
+            int v = this->wavetablepos;
+            v = v+1;
+            if(v>WTCOUNT-1)
+            {
+                v=0;
+            }
+            this->wavetablepos = v;
+        }
+    }
 	currkey = key;
+
 }
 
 //--------------------------------------------------------------
@@ -345,11 +446,11 @@ void ofApp::initWaveforms()
 	
 	for (int i = 0; i < 128; i++)
 	{
-		tritable[i] = ((-1.0 + i * (1.0 / ((double)WTLEN / 2.0))));
+        tritable[i] = ((-1.0 + i * (1.0 / ((double)WTLEN / 2.0))));
 	}
-	for (int i = 128; i < 256; i++)
+    for (int i = 0; i < 128; i++)
 	{
-		tritable[i] = ((1.0 - i * (1.0 / ((double)WTLEN / 2.0))));
+        tritable[i+128] = ((1.0 - i * (1.0 / ((double)WTLEN / 2.0))));
 	}
 	for (int i = 0; i < 256; i++)
 	{

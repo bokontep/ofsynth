@@ -30,6 +30,7 @@ template <int numvoices,int WAVEFORM_COUNT, int WTLEN> class VAEngine
     }
     void update(void)
     {
+        /*
       audio_block_t *block;
       uint32_t i;
 
@@ -40,7 +41,7 @@ template <int numvoices,int WAVEFORM_COUNT, int WTLEN> class VAEngine
       }
       transmit(block);
       release(block);
-      
+      */
     }
     float Process()
     {

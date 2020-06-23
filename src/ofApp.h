@@ -7,12 +7,16 @@ const int WTCOUNT = 256;
 const int WTLEN = 256;
 const int maxnumwaveforms = 40;
 const int midilines = 20;
+enum appstate{AS_PLAY=0,AS_EDIT_WAVETABLE};
 class ofApp : public ofBaseApp, public ofxMidiListener {
 
 	public:
 		void setup();
 		void update();
 		void draw();
+        void drawPlayMode();
+        void drawEditWaveTable();
+
 		void audioOut(float * output, int bufferSize, int nChannels);
 		void keyPressed(int key);
 		void keyReleased(int key);
@@ -48,6 +52,10 @@ class ofApp : public ofBaseApp, public ofxMidiListener {
 		int numwaveforms = 1;
 		int xoffset = 2;
 		int notelength = 300;
+        int wavetablepos=0;
+        int startwavetable = 0;
+        int endwavetable = 0;
+        appstate state = AS_PLAY;
 		//Midi In
 		void newMidiMessage(ofxMidiMessage& eventArgs);
 

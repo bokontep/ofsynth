@@ -5,7 +5,7 @@ void ofApp::setup(){
 	ofLogToFile("log.txt");
 	font.load("unifont-13.0.02.ttf", 32, true);
 	
-	initWaveforms();
+    initWaveforms(true, 0.5,0.5);
 	
 	//setup output port to control ableton push parameters
 	midiOut.listOutPorts();
@@ -188,7 +188,7 @@ void ofApp::drawEditWaveTable()
             {
                 y2=-32;
             }
-            ofDrawLine(xpos+w+i*WTLEN/4,ypos+y1,xpos+w+1+i*WTLEN/4,ypos+y2);
+            ofDrawLine(xpos+w+i*WTLEN/4,ypos-y1,xpos+w+1+i*WTLEN/4,ypos-y2);
         }
         sprintf(buf, "%03d",index);
         font.drawString(buf,xpos+i*WTLEN/4,ypos+64);
@@ -196,7 +196,7 @@ void ofApp::drawEditWaveTable()
     }
     for(int w=0;w<WTLEN-1;w++)
     {
-        ofDrawLine(xpos + w, ypos-512+Waveforms[this->wavetablepos*WTLEN+w]*128, xpos+w+1,ypos-512+Waveforms[this->wavetablepos*WTLEN+w+1]*128);
+        ofDrawLine(xpos + w, ypos-300-Waveforms[this->wavetablepos*WTLEN+w]*128, xpos+w+1,ypos-300-Waveforms[this->wavetablepos*WTLEN+w+1]*128);
     }
 }
 
@@ -430,39 +430,89 @@ void ofApp::gotMessage(ofMessage msg){
 void ofApp::dragEvent(ofDragInfo dragInfo){ 
 
 }
-
 void ofApp::initWaveforms()
+{
+    initWaveforms(false,0,0);
+}
+void ofApp::initWaveforms(bool bandlimit,float freq,float q)
 {
 	float sintable[WTLEN];
 	float tritable[WTLEN];
 	float squtable[WTLEN];
 	float sawtable[WTLEN];
 	float rndtable[WTLEN];
+    LowPass lp;
+    lp.SetParameters(freq,q);
+
 	for (int i = 0; i < WTLEN; i++)
 	{
 		sintable[i] = ((sin(2.0 * (PI / (float)WTLEN) * i)));
+
+
 	}
 	
-	
+    for (int i = 0; i <64;i++)
+    {
+        tritable[i] = 0.0+i*(1.0 / ((double)WTLEN / 4));
+
+    }
+    for (int i = 0; i<128;i++)
+    {
+        tritable[i+64] = +1.0-i*(2.0 / ((double)WTLEN / 2));
+    }
+
+    for (int i = 0;i<64;i++)
+    {
+        tritable[i+128+64] = -1.0 +i*(1.0 / ((double)WTLEN / 4));
+    }
+    if(bandlimit)
+    {
+        for(int i=0;i<256;i++)
+        {
+            tritable[i] = lp.Process(tritable[i]);
+        }
+    }
+    /*
 	for (int i = 0; i < 128; i++)
 	{
         tritable[i] = ((-1.0 + i * (1.0 / ((double)WTLEN / 2.0))));
+        if(bandlimit)
+        {
+            tritable[i]=lp.Process(tritable[i]);
+        }
 	}
     for (int i = 0; i < 128; i++)
 	{
         tritable[i+128] = ((1.0 - i * (1.0 / ((double)WTLEN / 2.0))));
+        if(bandlimit)
+        {
+            tritable[i]=lp.Process(tritable[i]);
+        }
 	}
+    */
 	for (int i = 0; i < 256; i++)
 	{
 		squtable[i] = (i < (WTLEN / 2) ? 1.0 : -1.0);
+        if(bandlimit)
+        {
+            squtable[i]=lp.Process(squtable[i]);
+        }
 	}
 	for (int i = 0; i < 256; i++)
 	{
 		sawtable[i] = ((-1.0 + (2.0 / WTLEN) * i));
+        if(bandlimit)
+        {
+            sawtable[i]=lp.Process(sawtable[i]);
+        }
 	}
 	for (int i = 0; i < 256; i++)
 	{
 		rndtable[i] = ofRandom(-1,1);
+        if(bandlimit)
+        {
+            rndtable[i] = lp.Process(rndtable[i]);
+        }
 	}
 	float sinf = 1.0;
 	float trif = 0.0;

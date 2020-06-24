@@ -39,7 +39,7 @@ public:
 		lowpass.SetParameters(ffreq, fq);
     }
     ~SynthVoice(void) {
-        
+
     }
     void SetSampleRate(float newSampleRate)
     {
@@ -57,6 +57,15 @@ public:
         osc[1].SetFrequency(freq2,sampleRate);
         adsr[0].Gate(1);
         adsr[1].Gate(1);
+
+    }
+    void Lfo1SetFrequency(float frequency)
+    {
+        lfo[0].SetFrequency(frequency,sampleRate/32);
+    }
+    void Lfo2SetFrequency(float frequency)
+    {
+        lfo[1].SetFrequency(frequency,sampleRate/32);
     }
     void MidiNoteOff()
     {
@@ -79,7 +88,14 @@ public:
     {
         osc[1].AddSharedWaveTable(len, waveTableIn);
     }
-    
+    void AddLfo1SharedWaveTable(int len, float *waveTableIn)
+    {
+        lfo[0].AddSharedWaveTable(len,waveTableIn);
+    }
+    void AddLfo2SharedWaveTable(int len, float *waveTableIn)
+    {
+        lfo[1].AddSharedWaveTable(len,waveTableIn);
+    }
     void SetOsc1ADSR(uint8_t a, float d,float s,float r)
     {
         adsr[0].SetADSR(a,d,s,r);
@@ -110,6 +126,7 @@ public:
       
       osc[0].SetFrequency(bendfreq1,sampleRate);
       osc[1].SetFrequency(bendfreq2,sampleRate);
+
       //AudioInterrupts();
     }
 
@@ -405,6 +422,7 @@ public:
 protected:
     FloatWaveTableOsc osc[2];
     ADSR adsr[2];
+    FloatWaveTableOsc lfo[2];
 	float vol1;
 	float vol2;
     float sampleRate;

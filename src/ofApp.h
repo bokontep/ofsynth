@@ -30,7 +30,8 @@ class ofApp : public ofBaseApp, public ofxMidiListener {
 		void dragEvent(ofDragInfo dragInfo);
 		void gotMessage(ofMessage msg);
 		void exit();
-		void initWaveforms();
+        void initWaveforms();
+        void initWaveforms(bool bandlimit, float f, float q);
 		void pushDisplayMessage(int x, int y, char* message);
 		void pushClearLine(int line);
 		void pushClearScreen();

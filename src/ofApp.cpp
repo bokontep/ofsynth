@@ -154,7 +154,8 @@ void ofApp::drawEditWaveTable()
     ofBackground(0.0,0.0,0.0,255.0);
     ofSetColor(0.0, 255.0, 10, 255.0);
     ofSetLineWidth(3.0);
-    font.drawString("EDIT WAVETABLE",20,33);
+	font.drawString("volna v0.1",20,33);
+    font.drawString("EDIT WAVETABLE",20,66);
     int ypos = 768-128;
     int xpos = 16;
     char buf[255];
@@ -207,6 +208,7 @@ void ofApp::drawPlayMode()
     ofSetColor(0.0, 255.0, 10, 255.0);
     ofSetLineWidth(3.0);
     int sign = 0;
+	float a = 2400;
     if (ringbuf[currwaveform * 256] >= 0)
     {
         sign = 1;
@@ -240,19 +242,20 @@ void ofApp::drawPlayMode()
         {
             ofSetColor(0.0, (i+1)*(255.0/numwaveforms), 10, 255.0);
 
-            ofLine(4.0*x-i*xoffset, ringbuf[startwaveform*256+(x + offset) % 256] * 500.0 + 300.0+20*i, 4.0*(x + 1)- i*xoffset, ringbuf[startwaveform*256+(x + 1 + offset) % 256] * 500.0 + 300.0+20*i);
+            ofLine(4.0*x-i*xoffset, -ringbuf[startwaveform*WTLEN+(x + offset) % WTLEN] * a + 300.0+20*i, 4.0*(x + 1)- i*xoffset, -ringbuf[startwaveform*WTLEN+(x + 1 + offset) % WTLEN] * a + 300.0+20*i);
 
         }
         startwaveform = (startwaveform + i) % numwaveforms;
     }
-    font.drawString("PLAY",20,33);
+	font.drawString("volna v0.1", 20, 33);
+    font.drawString("PLAY",20,66);
     if (triggerline)
     {
-        font.drawString("TRIGGER", 20, 66);
+        font.drawString("TRIGGER", 20, 99);
     }
-    char buf[255];
-    sprintf(buf, "keycode:%d", this->currkey);
-    font.drawString(buf, 20, 99);
+    //char buf[255];
+    //sprintf(buf, "keycode:%d", this->currkey);
+    //font.drawString(buf, 20, 132);
 
     if (!mididisplay.empty())
     {
@@ -443,32 +446,43 @@ void ofApp::initWaveforms(bool bandlimit,float freq,float q)
 	float rndtable[WTLEN];
     LowPass lp;
     lp.SetParameters(freq,q);
-
+	float max = 0.8;
 	for (int i = 0; i < WTLEN; i++)
 	{
-		sintable[i] = ((sin(2.0 * (PI / (float)WTLEN) * i)));
+		sintable[i] = max*sin(2.0 * (PI / (float)WTLEN) * i);
 
 
 	}
+	if (bandlimit)
+	{
+		lp.reset();
+		for (int i = 0; i < 256; i++)
+		{
 	
-    for (int i = 0; i <64;i++)
+			sintable[i] = lp.Process(sintable[i]);
+		}
+	}
+
+    for (int i = 0; i <WTLEN/4;i++)
     {
-        tritable[i] = 0.0+i*(1.0 / ((double)WTLEN / 4));
+        tritable[i] = i*(max/(WTLEN / 4));
 
     }
     for (int i = 0; i<128;i++)
     {
-        tritable[i+64] = +1.0-i*(2.0 / ((double)WTLEN / 2));
+        tritable[i+64] = max*(+1.0-i*(2.0 / ((double)WTLEN / 2)));
     }
 
     for (int i = 0;i<64;i++)
     {
-        tritable[i+128+64] = -1.0 +i*(1.0 / ((double)WTLEN / 4));
+        tritable[i+128+64] = max*(-1.0 +i*(1.0 / ((double)WTLEN / 2)));
     }
     if(bandlimit)
     {
+		lp.reset();
         for(int i=0;i<256;i++)
         {
+			
             tritable[i] = lp.Process(tritable[i]);
         }
     }
@@ -490,29 +504,44 @@ void ofApp::initWaveforms(bool bandlimit,float freq,float q)
         }
 	}
     */
+	for (int i = 0; i < WTLEN; i++)
+	{
+		squtable[i] = max*(i < (WTLEN / 2) ? 1.0 : -1.0);
+	}
+	if (bandlimit)
+	{
+		lp.reset();
+		for (int i = 0; i < WTLEN; i++)
+		{
+			squtable[i] = lp.Process(squtable[i]);
+		}
+	}
+
 	for (int i = 0; i < 256; i++)
 	{
-		squtable[i] = (i < (WTLEN / 2) ? 1.0 : -1.0);
-        if(bandlimit)
-        {
-            squtable[i]=lp.Process(squtable[i]);
-        }
+		sawtable[i] = max*((-1.0 + (2.0 / WTLEN) * i));
+        
+	}
+	if (bandlimit)
+	{
+		lp.reset();
+		for (int i = 0; i < WTLEN; i++)
+		{
+			sawtable[i] = lp.Process(sawtable[i]);
+		}
 	}
 	for (int i = 0; i < 256; i++)
 	{
-		sawtable[i] = ((-1.0 + (2.0 / WTLEN) * i));
-        if(bandlimit)
-        {
-            sawtable[i]=lp.Process(sawtable[i]);
-        }
+		rndtable[i] = max*ofRandom(-1,1);
+		
 	}
-	for (int i = 0; i < 256; i++)
+	if (bandlimit)
 	{
-		rndtable[i] = ofRandom(-1,1);
-        if(bandlimit)
-        {
-            rndtable[i] = lp.Process(rndtable[i]);
-        }
+		lp.reset();
+		for (int i = 0; i < WTLEN; i++)
+		{
+			rndtable[i] = lp.Process(rndtable[i]);
+		}
 	}
 	float sinf = 1.0;
 	float trif = 0.0;

@@ -48,6 +48,11 @@ public:
     {
       return q;
     }
+	void reset()
+	{
+		buf0 = 0;
+		buf1 = 0;
+	}
 protected:
     float q;
     float f;

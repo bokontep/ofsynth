@@ -156,9 +156,13 @@ void ofApp::drawEditWaveTable()
     ofSetLineWidth(3.0);
 	font.drawString("volna v0.1",20,33);
     font.drawString("EDIT WAVETABLE",20,66);
-    int ypos = 768-128;
-    int xpos = 16;
     char buf[255];
+    sprintf(buf,"xwt=%03d ywt=%03d",xwt,ywt);
+    font.drawString(buf,20,99);
+    //int ypos = 768-128;
+    //int yoffset = 300;
+    //int xpos = 16;
+
     ofSetLineWidth(1.0);
     for(int i=0;i<18;i++)
     {
@@ -197,7 +201,7 @@ void ofApp::drawEditWaveTable()
     }
     for(int w=0;w<WTLEN-1;w++)
     {
-        ofDrawLine(xpos + w, ypos-300-Waveforms[this->wavetablepos*WTLEN+w]*128, xpos+w+1,ypos-300-Waveforms[this->wavetablepos*WTLEN+w+1]*128);
+        ofDrawLine(xpos + w, ypos-yoffset-Waveforms[this->wavetablepos*WTLEN+w]*128, xpos+w+1,ypos-yoffset-Waveforms[this->wavetablepos*WTLEN+w+1]*128);
     }
 }
 
@@ -393,20 +397,60 @@ void ofApp::keyReleased(int key) {
 void ofApp::mouseMoved(int x, int y ){
 
 }
-
+void ofApp::updateWavetable(int x, int y, int button){
+    if(state==AS_EDIT_WAVETABLE)
+    {
+        int xwt = x-xpos;
+        this->xwt = xwt;
+        int ywt = y-ypos+yoffset;
+        this->ywt = ywt;
+        if(xwt>=0 && xwt<WTLEN)
+        {
+            if(ywt>=-128 && ywt<127)
+            {
+                Waveforms[this->currwaveform*WTLEN+xwt]=-((ywt/128.0));
+            }
+        }
+    }
+}
 //--------------------------------------------------------------
 void ofApp::mouseDragged(int x, int y, int button){
 
+    int diffx = x-lastx;
+    int diffy = y-lasty;
+    int p = 1;
+    if(x<lastx)
+    {
+        for(int xi=lastx;xi>=x;xi=xi-1)
+        {
+            updateWavetable(xi, y, 0);
+        }
+    }
+    else
+    {
+        for(int xi=lastx;xi<x;xi=xi+1)
+        {
+            updateWavetable(xi,y,0);
+        }
+    }
+
+    lastx = x;
+    lasty = y;
 }
 
 //--------------------------------------------------------------
 void ofApp::mousePressed(int x, int y, int button){
+    this->drawWavetable =true;
+    updateWavetable(x,y,0);
+    lastx = x;
+    lasty = y;
+
 
 }
 
 //--------------------------------------------------------------
 void ofApp::mouseReleased(int x, int y, int button){
-
+    this->drawWavetable = false;
 }
 
 //--------------------------------------------------------------

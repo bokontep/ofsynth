@@ -39,7 +39,8 @@ class ofApp : public ofBaseApp, public ofxMidiListener {
 		void pushUserMode();
 		void pushLiveMode();
 		void pushSetPadRGB(int x, int y, uint8_t r, uint8_t g, uint8_t b);
-		
+        void updateWavetable(int x, int y, int button);
+
 		std::list<string> mididisplay;
 		
 		ofTrueTypeFont font;
@@ -77,6 +78,14 @@ private:
 	uint64_t lastTime = 0;
 	uint64_t counter = 0;
 	bool toggle = true;
+    int ypos = 768-128;
+    int yoffset = 300;
+    int xpos = 16;
+    int ywt = 0;
+    int xwt = 0;
+    bool drawWavetable = false;
+    int lastx;
+    int lasty;
 
 				
 };

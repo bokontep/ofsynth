@@ -226,6 +226,7 @@
     <ClInclude Include="src\ADSR.h" />
     <ClInclude Include="src\FloatWaveTableOsc.h" />
     <ClInclude Include="src\LowPass.h" />
+    <ClInclude Include="src\MidiMap.h" />
     <ClInclude Include="src\ofApp.h" />
     <ClInclude Include="..\..\..\addons\ofxGui\src\ofxBaseGui.h" />
     <ClInclude Include="..\..\..\addons\ofxGui\src\ofxButton.h" />

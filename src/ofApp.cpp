@@ -78,16 +78,27 @@ void ofApp::update(){
 	int offset = 0;
 	int semitones = 108;
 	uint64_t now = ofGetElapsedTimeMillis();
-	for (ofxMidiMessage message:midiMessages)
+	midiEventCount = midiInMessages.size();
+	int newMessagesCount = midiInMessages.size();
+	while(newMessagesCount>0)
+	//for (ofxMidiMessage message:midiMessages)
+	
 	{
+		this->midiInLock.lock();
+		ofxMidiMessage message = midiInMessages.front();
+		midiInMessages.pop_front();
+		this->midiInLock.unlock();
+		newMessagesCount--;
+		int pitch = 0;
 		switch (message.status)
 		{
 		case MIDI_NOTE_ON:
 			if (message.pitch >= 36 && message.pitch <= 99)
 			{
+				pitch = midiMap.Map3(message.pitch, 36,5);
 				if (triggerline)
 					message.velocity = 127;
-				engine->handleNoteOn(0, message.pitch, message.velocity);
+				engine->handleNoteOn(0, pitch, message.velocity);
 				{
 					int y = (message.pitch - 36) / 8;
 					int x = message.pitch - y * 8 - 36;
@@ -99,7 +110,8 @@ void ofApp::update(){
 			}
 			break;
 		case MIDI_NOTE_OFF:
-			engine->handleNoteOff(0, message.pitch, message.velocity);
+			pitch = midiMap.Map3(message.pitch, 36,5);
+			engine->handleNoteOff(0, pitch, message.velocity);
 			{
 				int y = (message.pitch - 36) / 8;
 				int x = message.pitch - y * 8 - 36;
@@ -108,7 +120,7 @@ void ofApp::update(){
 					pushSetPad(x, y, 0);
 				}
 			}
-			break;
+			
 			break;
 		case MIDI_PITCH_BEND:
 			engine->handlePitchBend(0, message.value);
@@ -119,7 +131,8 @@ void ofApp::update(){
 
 		}
 	}
-	midiMessages.clear();/*
+	//midiMessages.clear();
+	/*
 	if (now - lastTime > notelength)
 	{
 		lastTime = now;
@@ -257,7 +270,9 @@ void ofApp::drawPlayMode()
     {
         font.drawString("TRIGGER", 20, 99);
     }
-    //char buf[255];
+    char buf[255];
+	sprintf(buf, "%d", midiEventCount);
+	font.drawString(buf, 20, 132);
     //sprintf(buf, "keycode:%d", this->currkey);
     //font.drawString(buf, 20, 132);
 
@@ -639,10 +654,12 @@ void ofApp::initWaveforms(bool bandlimit,float freq,float q)
 }
 
 void ofApp::newMidiMessage(ofxMidiMessage& msg) {
-
+	midiInLock.lock();
+	this->midiInMessages.push_back(msg);
+	midiInLock.unlock();
 	// add the latest message to the message queue
 	char buf[255];
-	midiMessages.push_back(msg);
+	//midiMessages.push_back(msg);
 	if (msg.status == MIDI_CONTROL_CHANGE)
 	{
 		sprintf(buf, "CC%02d|%+03d|%+03d", msg.channel, msg.control, msg.value);
@@ -660,9 +677,10 @@ void ofApp::newMidiMessage(ofxMidiMessage& msg) {
 	}
 	
 	// remove any old messages if we have too many
+	/*
 	while (midiMessages.size() > maxMessages) {
 		midiMessages.erase(midiMessages.begin());
-	}
+	}*/
 }
 
 void ofApp::pushDisplayMessage(int x, int y, char* message)

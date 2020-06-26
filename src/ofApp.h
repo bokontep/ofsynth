@@ -3,6 +3,7 @@
 #include "ofMain.h"
 #include "ofxMidi.h"
 #include "VAEngine.h"
+#include "MidiMap.h"
 const int WTCOUNT = 256;
 const int WTLEN = 256;
 const int maxnumwaveforms = 40;
@@ -40,9 +41,9 @@ class ofApp : public ofBaseApp, public ofxMidiListener {
 		void pushLiveMode();
 		void pushSetPadRGB(int x, int y, uint8_t r, uint8_t g, uint8_t b);
         void updateWavetable(int x, int y, int button);
-
+		int midiEventCount = 0;
 		std::list<string> mididisplay;
-		
+		std::deque<ofxMidiMessage> midiInMessages;
 		ofTrueTypeFont font;
 		int currkey=0;
 		VAEngine<16,256,256>* engine;
@@ -86,6 +87,7 @@ private:
     bool drawWavetable = false;
     int lastx;
     int lasty;
-
+	ofMutex midiInLock;
+	MidiMap midiMap;
 				
 };

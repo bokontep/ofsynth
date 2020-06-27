@@ -95,7 +95,7 @@ void ofApp::update(){
 		case MIDI_NOTE_ON:
 			if (message.pitch >= 36 && message.pitch <= 99)
 			{
-				pitch = midiMap.Map3(message.pitch, 36,5);
+				pitch = midiMap.MapMajor(message.pitch, 24);
 				if (triggerline)
 					message.velocity = 127;
 				engine->handleNoteOn(0, pitch, message.velocity);
@@ -110,7 +110,7 @@ void ofApp::update(){
 			}
 			break;
 		case MIDI_NOTE_OFF:
-			pitch = midiMap.Map3(message.pitch, 36,5);
+			pitch = midiMap.MapMajor(message.pitch, 24);
 			engine->handleNoteOff(0, pitch, message.velocity);
 			{
 				int y = (message.pitch - 36) / 8;

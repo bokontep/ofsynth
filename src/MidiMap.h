@@ -67,6 +67,34 @@ public :
 
 		return base + noteOut;
 	}
+	int MapScale(int noteIn, int base, int scale[])
+	{
+		
+		if (noteIn < 36 || noteIn>99)
+		{
+			return noteIn;
+		}
+		int noteOut = noteIn - 36;
+		
+		noteOut = scale[noteOut]+base;
+		return noteOut;
+	}
+	int majorScale[64] =
+	{
+		0, 2, 4, 5, 7, 9, 11, 12,
+		5, 7, 9, 11,12,14,16, 17,
+		11,12,14,16,17,19,21, 23,
+		16,17,19,21,23,24,26, 28,
+		21,23,24,26,28,29,31, 33,
+		26,28,29,31,33,35,36, 38,
+		31,33,35,36,38,40,41, 43,
+		36,38,40,41,43,45,47, 48
 
+	};
+	
+	int MapMajor(int noteIn, int base)
+	{
+		return MapScale(noteIn, base,  this->majorScale);
+	}
 };
 

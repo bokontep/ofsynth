@@ -89,5 +89,5 @@ private:
     int lasty;
 	ofMutex midiInLock;
 	MidiMap midiMap;
-				
+	long colorCounter = 0;
 };

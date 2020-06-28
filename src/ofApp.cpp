@@ -2,6 +2,9 @@
 
 //--------------------------------------------------------------
 void ofApp::setup(){
+	//int scale_minor[7] = { 0,2,3,5,7,8,10, };
+	int scale_minor[8] = {0,1,4,5,7,8,10,11};
+	midiMap.CreateMidiMap(scale_minor, 8, midiMap.scale);
 	ofLogToFile("log.txt");
 	font.load("unifont-13.0.02.ttf", 32, true);
 	
@@ -44,8 +47,8 @@ void ofApp::setup(){
 	midiIn.setVerbose(true);
 	//pushLiveMode();
 	pushClearScreen();
-	pushDisplayMessage(0, 0, "BOKONTEP WAVETABLESYNTH V.0.1");
-	pushDisplayMessage(0, 1, "(C) 2020 ***COVID19***");
+	pushDisplayMessage(0, 0, "Volna V.0.1 BOKONTEP");
+	pushDisplayMessage(0, 1, "(C) 2020 ");
 	engine = new VAEngine<16,256,256>(&this->Waveforms[0]);
 	engine->init(44100);
 	soundStream = new ofSoundStream();
@@ -74,9 +77,13 @@ void ofApp::setup(){
 
 //--------------------------------------------------------------
 void ofApp::update(){
+	char b[255];
 
 	int offset = 0;
 	int semitones = 108;
+	sprintf(b,"W1:%03d V1:    P1:    W2:%03d V2:    P2:   ", engine->getOsc1Wave(), engine->getOsc2Wave());
+	pushDisplayMessage(0, 2, b);
+
 	uint64_t now = ofGetElapsedTimeMillis();
 	midiEventCount = midiInMessages.size();
 	int newMessagesCount = midiInMessages.size();
@@ -95,7 +102,7 @@ void ofApp::update(){
 		case MIDI_NOTE_ON:
 			if (message.pitch >= 36 && message.pitch <= 99)
 			{
-				pitch = midiMap.MapMajor(message.pitch, 24);
+				pitch = midiMap.MapMinor(message.pitch, 24);
 				if (triggerline)
 					message.velocity = 127;
 				engine->handleNoteOn(0, pitch, message.velocity);
@@ -110,7 +117,7 @@ void ofApp::update(){
 			}
 			break;
 		case MIDI_NOTE_OFF:
-			pitch = midiMap.MapMajor(message.pitch, 24);
+			pitch = midiMap.MapMinor(message.pitch, 24);
 			engine->handleNoteOff(0, pitch, message.velocity);
 			{
 				int y = (message.pitch - 36) / 8;
@@ -131,35 +138,18 @@ void ofApp::update(){
 
 		}
 	}
-	//midiMessages.clear();
-	/*
-	if (now - lastTime > notelength)
+	if (colorCounter % 1000 == 0)
 	{
-		lastTime = now;
-		if (toggle) {
-			engine->handleNoteOn(0, offset + counter % semitones, 127);
-			engine->handleNoteOn(0, offset + counter % semitones +5, 127);
-			engine->handleNoteOn(0, offset + counter % semitones +9, 127);
-
-			toggle = !toggle;
-		}
-		else
+		for (int y = 0; y < 9; y++)
 		{
-			engine->handleNoteOff(0, offset + counter % semitones,0);
-			engine->handleNoteOff(0, offset + counter % semitones + 5, 0);
-			engine->handleNoteOff(0, offset + counter % semitones + 9, 0);
-
-			toggle = !toggle;
-			engine->setOsc1Wave(counter % 256);
-			engine->setOsc2Wave(counter % 256);
-			engine->setPwm(counter % 128);
-			this->counter++;
-			lastTime = now + notelength;
+			for (int x = 0; x < 8; x++)
+			{
+				pushSetPadRGB(x, y, 8 * x + 8, 8 * y + y, 8 * x + y);
+			}
 		}
 		
-		//this->counter++;
 	}
-	*/
+	colorCounter++;
 }
 
 void ofApp::drawEditWaveTable()

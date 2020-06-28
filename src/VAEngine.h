@@ -50,7 +50,9 @@ template <int numvoices,int WAVEFORM_COUNT, int WTLEN> class VAEngine
       {
         s = s + (mSynthVoice[i].Process() );
       }
-      return s/numvoices;
+      // return s/numvoices;
+	  return s/(activenotes+2);
+	  
     }
     
 	void handleNoteOn(uint8_t channel, uint8_t note, uint8_t velocity)
@@ -63,8 +65,10 @@ template <int numvoices,int WAVEFORM_COUNT, int WTLEN> class VAEngine
         if (voices_notes[i] == -1)
         {
           voices_notes[i] = note;
+		  
           mSynthVoice[i].MidiNoteOn(note, velocity);
-          //found = true;
+		  activenotes++;
+		  //found = true;
           return;
         }
         if (voices_notes[i] > maxnote)
@@ -75,6 +79,7 @@ template <int numvoices,int WAVEFORM_COUNT, int WTLEN> class VAEngine
       }
       voices_notes[maxnoteidx] = note;
       mSynthVoice[maxnoteidx].MidiNoteOn(note, velocity);
+	  activenotes++;
     }
     
     void handleNoteOff(uint8_t channel, uint8_t note, uint8_t velocity)
@@ -86,6 +91,7 @@ template <int numvoices,int WAVEFORM_COUNT, int WTLEN> class VAEngine
         {
           voices_notes[i] = -1;
           mSynthVoice[i].MidiNoteOff();
+		  activenotes--;
           //break;
         }
       }
@@ -126,10 +132,15 @@ template <int numvoices,int WAVEFORM_COUNT, int WTLEN> class VAEngine
 	}
 	void setOsc1Wave(uint8_t w)
 	{
+		this->osc1Wave = w;
 		for (int i = 0; i < numvoices; i++)
 		{
 			mSynthVoice[i].MidiOsc1Wave(w);
 		}
+	}
+	uint8_t getOsc1Wave()
+	{
+		return this->osc1Wave;
 	}
 	void setOsc2Wave(uint8_t w)
 	{
@@ -138,6 +149,10 @@ template <int numvoices,int WAVEFORM_COUNT, int WTLEN> class VAEngine
 			mSynthVoice[i].MidiOsc2Wave(w);
 		}
 	}
+	uint8_t getOsc2Wave()
+	{
+		return this->osc2Wave;
+	}
 	void setPwm(uint8_t pwm)
 	{
 		for (int i = 0; i < numvoices; i++)
@@ -145,6 +160,7 @@ template <int numvoices,int WAVEFORM_COUNT, int WTLEN> class VAEngine
 			mSynthVoice[i].MidiPwm(pwm);
 		}
 	}
+	
     void handleControlChange(uint8_t channel, uint8_t control, uint8_t value)
     {
       for(int i=0;i<numvoices;i++)
@@ -157,5 +173,12 @@ template <int numvoices,int WAVEFORM_COUNT, int WTLEN> class VAEngine
       SynthVoice mSynthVoice[numvoices];
       int voices_notes[numvoices];
       float* waveforms;
+	  int activenotes = 0;
+	  int osc1Wave = 0;
+	  int osc2Wave = 0;
+	  int osc1Vol = 0;
+	  int osc2Vol = 0;
+	  int osc1Pwm = 0;
+	  int osc2Pwm = 0;
 };
 #endif

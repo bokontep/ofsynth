@@ -91,10 +91,69 @@ public :
 		36,38,40,41,43,45,47, 48
 
 	};
+	int scale[64] =
+	{
+		0,0,0,0,0,0,0,0,
+		0,0,0,0,0,0,0,0,
+		0,0,0,0,0,0,0,0,
+		0,0,0,0,0,0,0,0,
+		0,0,0,0,0,0,0,0,
+		0,0,0,0,0,0,0,0,
+		0,0,0,0,0,0,0,0,
+		0,0,0,0,0,0,0,0
+	};
 	
+	
+	
+	int MapMinor(int noteOn, int base)
+	{
+		
+		return MapScale(noteOn, base, scale);
+	}
 	int MapMajor(int noteIn, int base)
 	{
 		return MapScale(noteIn, base,  this->majorScale);
+	}
+	void CreateMidiMap(int* scale, int scalelen, int* scalemap)
+	{
+		int row = 0;
+		int count = 0;
+		int currnote = 0;
+		int oct = 0;
+		int base = 0;
+		int baseoct = 0;
+		while (count < 64)
+		{
+
+			scalemap[count] = scale[currnote % scalelen]+12*oct;
+			count++;
+			currnote++;
+			if (currnote % scalelen == 0)
+			{
+				oct = oct + 1;
+			}
+			if (count % 8  == 3)
+			{
+				base = currnote;
+				baseoct = oct;
+			}
+			if (count % 8 == 0)
+			{
+				currnote = base;
+				oct = baseoct;
+			}
+			
+
+
+		}
+		for (int row = 7; row >= 0; row--)
+		{
+			for (int col = 0; col < 8; col++)
+			{
+				printf("%3d ",scalemap[8*row+col]);
+			}
+			printf("\r\n");
+		}
 	}
 };
 

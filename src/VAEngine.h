@@ -28,6 +28,7 @@ template <int numvoices,int WAVEFORM_COUNT, int WTLEN> class VAEngine
       }
       
     }
+	
     void update(void)
     {
         /*
@@ -108,6 +109,20 @@ template <int numvoices,int WAVEFORM_COUNT, int WTLEN> class VAEngine
         
     }
     
+	void handleSetTet(float tet)
+	{
+		for (int i = 0; i < numvoices; i++)
+		{
+			mSynthVoice[i].SetTet(tet);
+		}
+	}
+	void handleSetTune(float tune)
+	{
+		for (int i = 0; i < numvoices; i++)
+		{
+			mSynthVoice[i].SetTune(tet);
+		}
+	}
     void handlePitchBend(uint8_t channel, int bend)
     {
       

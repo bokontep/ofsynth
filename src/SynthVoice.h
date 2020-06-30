@@ -49,7 +49,7 @@ public:
     void MidiNoteOn(uint8_t note, uint8_t vel)
     {
         
-        float f = pow(2.0,(note*1.0-69.0)/12.0)*440.0;
+        float f = pow(2.0,(note*1.0-69.0)/tet)*tune;
         velocity = vel/128.0; 
         freq1 = f;
         freq2 = f;
@@ -120,7 +120,7 @@ public:
     {
       //AudioNoInterrupts();
       float factor = ((bend - 8192.0)/8192.0);
-      float mul = pow(2.0,(factor*12.0)/12.0);
+      float mul = pow(2.0,(factor*tet)/tet);
       float bendfreq1 = freq1*mul;
       float bendfreq2 = freq2*mul;
       
@@ -418,7 +418,14 @@ public:
         }
         return true;
     }
-    
+	void SetTet(float tet)
+	{
+		this->tet = tet;
+	}
+	void SetTune(float tune)
+	{
+		this->tune = tune;
+	}
 protected:
     FloatWaveTableOsc osc[2];
     ADSR adsr[2];
@@ -439,6 +446,8 @@ protected:
     LowPass lowpass;
     uint8_t wt1_idx;
     uint8_t wt2_idx;
+	float tet = 12.0;
+	float tune = 440.0;
 };
 
 #endif

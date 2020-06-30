@@ -2,6 +2,7 @@
 
 //--------------------------------------------------------------
 void ofApp::setup(){
+	int scale_chromatic_tet24[24] = { 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23 };
 	//int scale_minor[7] = { 0,2,3,5,7,8,10, };
 	int scale_major[7] = { 0,2,4,5,7,9,11 };
 	int scale_natural_minor[7] = { 0,2,3,5,7,8,10 };
@@ -19,7 +20,7 @@ void ofApp::setup(){
 	int whole_half[8] = {0,2,3,5,6,8,9,11};
 	int half_whole[8] = { 0,1,3,4,6,7,9,10 };
 
-	midiMap.CreateMidiMap(scale_acoustic , 8, midiMap.scale,24);
+	//midiMap.CreateMidiMap(scale_chromatic_tet24, 24, midiMap.scale,24);
 	ofLogToFile("log.txt");
 	font.load("unifont-13.0.02.ttf", 32, true);
 	
@@ -66,6 +67,7 @@ void ofApp::setup(){
 	pushDisplayMessage(0, 1, "(C) 2020 ");
 	engine = new VAEngine<16,256,256>(&this->Waveforms[0]);
 	engine->init(44100);
+	engine->handleSetTet(36);
 	soundStream = new ofSoundStream();
 	engine->setADSR(30, 30, 127, 20);
 	lastTime = ofGetElapsedTimeMillis();
@@ -117,7 +119,7 @@ void ofApp::update(){
 		case MIDI_NOTE_ON:
 			if (message.pitch >= 36 && message.pitch <= 99)
 			{
-				pitch = midiMap.MapMinor(message.pitch, 24);
+				pitch = message.pitch;//midiMap.MapMinor(message.pitch, 24);
 				if (triggerline)
 					message.velocity = 127;
 				engine->handleNoteOn(0, pitch, message.velocity);
@@ -133,6 +135,7 @@ void ofApp::update(){
 			break;
 		case MIDI_NOTE_OFF:
 			pitch = midiMap.MapMinor(message.pitch, 24);
+			pitch = message.pitch;
 			engine->handleNoteOff(0, pitch, message.velocity);
 			{
 				int y = (message.pitch - 36) / 8;

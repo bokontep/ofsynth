@@ -3,8 +3,23 @@
 //--------------------------------------------------------------
 void ofApp::setup(){
 	//int scale_minor[7] = { 0,2,3,5,7,8,10, };
-	int scale_minor[8] = {0,1,4,5,7,8,10,11};
-	midiMap.CreateMidiMap(scale_minor, 8, midiMap.scale);
+	int scale_major[7] = { 0,2,4,5,7,9,11 };
+	int scale_natural_minor[7] = { 0,2,3,5,7,8,10 };
+	int scale_harmonic_minor[7] = { 0,2,3,5,7,8,11 };
+	int scale_ascending_melodic_minor[7] = { 0,2,3,5,7,9,11 };
+	int scale_acoustic[8] = { 0, 2, 4, 6, 7, 9, 10, 11 };
+	int scale_major2[10] = { 0,1,2,4,5,7,8,9,10,11 };
+
+	int scale_minor_2[8] = {0,1,4,5,7,8,10,11};
+	int scale_pentatonic[5] = {0,3,5,7,10};
+	int scale_blues[6] = { 0,3,4,5,7,10 };
+	int chinese_pentatonic[5] = { 0,2,5,7,9 };
+	int chromatic[12] = { 0,1,2,3,4,5,6,7,8,9,10,11 };
+	int whole_tone[6] = { 0,2,4,6,8,10 };
+	int whole_half[8] = {0,2,3,5,6,8,9,11};
+	int half_whole[8] = { 0,1,3,4,6,7,9,10 };
+
+	midiMap.CreateMidiMap(scale_acoustic , 8, midiMap.scale,24);
 	ofLogToFile("log.txt");
 	font.load("unifont-13.0.02.ttf", 32, true);
 	
@@ -389,6 +404,14 @@ void ofApp::keyPressed(int key) {
             this->wavetablepos = v;
         }
     }
+	if (key == 'l' || key == 'L')
+	{
+		LoadWavetable("wavetable.dat", this->Waveforms, WTCOUNT*WTLEN);
+	}
+	if (key == 's' || key == 'S')
+	{
+		SaveWavetable("wavetable.dat", this->Waveforms, WTCOUNT*WTLEN);
+	}
 	currkey = key;
 
 }
@@ -413,7 +436,7 @@ void ofApp::updateWavetable(int x, int y, int button){
         {
             if(ywt>=-128 && ywt<127)
             {
-                Waveforms[this->currwaveform*WTLEN+xwt]=-((ywt/128.0));
+                Waveforms[this->wavetablepos*WTLEN+xwt]=-((ywt/128.0));
             }
         }
     }

@@ -224,6 +224,7 @@
   <ItemGroup>
     <ClInclude Include="src\AD.h" />
     <ClInclude Include="src\ADSR.h" />
+    <ClInclude Include="src\Fileops.h" />
     <ClInclude Include="src\FloatWaveTableOsc.h" />
     <ClInclude Include="src\LowPass.h" />
     <ClInclude Include="src\MidiMap.h" />

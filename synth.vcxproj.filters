@@ -332,6 +332,9 @@
     <ClInclude Include="src\MidiMap.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="src\Fileops.h">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="icon.rc" />

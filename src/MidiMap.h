@@ -114,7 +114,7 @@ public :
 	{
 		return MapScale(noteIn, base,  this->majorScale);
 	}
-	void CreateMidiMap(int* scale, int scalelen, int* scalemap)
+	void CreateMidiMap(int* scale, int scalelen, int* scalemap,int offset)
 	{
 		int row = 0;
 		int count = 0;
@@ -125,7 +125,7 @@ public :
 		while (count < 64)
 		{
 
-			scalemap[count] = scale[currnote % scalelen]+12*oct;
+			scalemap[count] = scale[currnote % scalelen]+12*oct+offset;
 			count++;
 			currnote++;
 			if (currnote % scalelen == 0)

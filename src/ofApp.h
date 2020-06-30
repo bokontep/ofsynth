@@ -4,6 +4,7 @@
 #include "ofxMidi.h"
 #include "VAEngine.h"
 #include "MidiMap.h"
+#include "Fileops.h"
 const int WTCOUNT = 256;
 const int WTLEN = 256;
 const int maxnumwaveforms = 40;
